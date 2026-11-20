@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#03070b">
+  <meta name="referrer" content="no-referrer">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="JARVIS">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ntfy.sh; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>JARVIS</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="vendor/nacl-fast.min.js"></script>
+  <script src="lib.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <header class="top">
+    <div class="brand"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" class="core"/></svg>JARVIS</div>
+    <div id="pc" class="pc off"><span class="dot"></span><span id="pc-text">CONNECTING</span></div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="chat" class="on">CHAT</button>
+    <button role="tab" data-tab="approvals">APPROVALS<span id="ap-badge" class="badge" hidden></span></button>
+    <button role="tab" data-tab="alerts">ALERTS<span id="al-badge" class="badge cyan" hidden></span></button>
+  </nav>
+
+  <main>
+    <section id="chat" class="view on">
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
+    <section id="approvals" class="view"><div id="ap-list" class="list"></div></section>
+    <section id="alerts" class="view">
+      <div id="push-box" class="push-box" hidden>
+        <div id="push-text" class="hint"></div>
+        <button id="push-btn" class="chip">ENABLE NOTIFICATIONS</button>
+      </div>
+      <div id="al-list" class="list"></div>
+    </section>
+    <section id="unpaired" class="view">
+      <div class="empty">
+        <svg class="big-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" class="core"/></svg>
+        <h2>NOT PAIRED</h2>
+        <p>On the PC open <b>Settings → Phone</b> and scan the QR code with this phone's camera.</p>
+        <p class="hint" id="unpaired-why"></p>
+      </div>
+    </section>
+  </main>
+
+  <form id="bar" class="bar" autocomplete="off">
+    <textarea id="input" rows="1" placeholder="Message JARVIS" enterkeyhint="send" aria-label="Message"></textarea>
+    <button id="send" type="submit" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M3 11.5 21 3l-6.5 18-3-7.5z"/></svg></button>
+  </form>
+</body>
+</html>

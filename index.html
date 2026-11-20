@@ -9,12 +9,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JARVIS">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ntfy.sh; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src https://ntfy.sh; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
   <title>JARVIS</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script src="guard.js"></script>
   <script src="vendor/nacl-fast.min.js"></script>
   <script src="lib.js"></script>
   <script type="module" src="app.js"></script>
@@ -23,7 +24,10 @@
   <div class="grid-bg"></div>
   <header class="top">
     <div class="brand"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" class="core"/></svg>JARVIS</div>
-    <div id="pc" class="pc off"><span class="dot"></span><span id="pc-text">CONNECTING</span></div>
+    <div class="top-right">
+      <div id="pc" class="pc off"><span class="dot"></span><span id="pc-text">CONNECTING</span></div>
+      <button id="lock-btn" class="lock-btn" aria-label="Lock" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
+    </div>
   </header>
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="chat" class="on">CHAT</button>
@@ -42,6 +46,33 @@
         <button id="push-btn" class="chip">ENABLE NOTIFICATIONS</button>
       </div>
       <div id="al-list" class="list"></div>
+    </section>
+    <section id="lock" class="view">
+      <div class="pin">
+        <svg class="big-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" class="core"/></svg>
+        <h2 id="pin-title">LOCKED</h2>
+        <p id="pin-sub" class="hint">Enter your PIN</p>
+        <div id="pin-dots" class="pin-dots" aria-live="polite"></div>
+        <p id="pin-msg" class="pin-msg"></p>
+        <div class="keypad" id="keypad">
+          <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+          <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+          <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+          <button data-k="del" class="k-fn" aria-label="Delete">DEL</button><button data-k="0">0</button><button data-k="ok" class="k-fn k-ok" aria-label="OK">OK</button>
+        </div>
+      </div>
+    </section>
+    <section id="enroll" class="view">
+      <div class="empty enroll">
+        <svg class="big-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3M19 13v-3a7 7 0 0 0-11-5.7M12 7a3 3 0 0 0-3 3v4a6 6 0 0 0 1 3.3M15 10v4a9 9 0 0 1-1.5 5M12 11v3a12 12 0 0 1-2 6.5"/></svg>
+        <h2>SECURE APPROVALS</h2>
+        <p id="enroll-text">Approving from this phone will need Face ID or your fingerprint. Denying never does.</p>
+        <div class="enroll-btns">
+          <button id="enroll-btn" class="btn-ok wide">ENABLE FACE ID / FINGERPRINT</button>
+          <button id="enroll-skip" class="btn-no wide">SKIP · THIS PHONE CAN ONLY DENY</button>
+        </div>
+        <p class="hint" id="enroll-why"></p>
+      </div>
     </section>
     <section id="unpaired" class="view">
       <div class="empty">

@@ -1,8 +1,8 @@
 /* JARVIS phone service worker: offline shell + decrypting Web Push notifications. */
 importScripts('vendor/nacl-fast.min.js', 'lib.js');
 
-var CACHE = 'jarvis-shell-v1';
-var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'lib.js', 'vendor/nacl-fast.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
+var CACHE = 'jarvis-shell-v3';
+var SHELL = ['./', 'index.html', 'style.css', 'guard.js', 'app.js', 'lib.js', 'vendor/nacl-fast.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'fonts/orbitron-latin-700-normal.woff2', 'fonts/rajdhani-latin-500-normal.woff2', 'fonts/rajdhani-latin-600-normal.woff2', 'fonts/share-tech-mono-latin-400-normal.woff2'];
 
 self.addEventListener('install', function (e) {
@@ -21,15 +21,17 @@ self.addEventListener('fetch', function (e) {
   }).catch(function () { return caches.match(e.request, { ignoreSearch: true }).then(function (r) { return r || caches.match('index.html'); }); }));
 });
 
+// Pushes are sealed with the push-only key (stored for the SW; the main pairing key stays PIN-encrypted), and carry
+// only a short preview: approvals say just "approval needed" and are decided in the unlocked app with Face ID.
 self.addEventListener('push', function (e) {
-  e.waitUntil(JV.pairing().then(function (p) {
-    var env = p && e.data ? JV.open(p.keyBytes, e.data.text()) : null;
-    if (!env) return self.registration.showNotification('JARVIS', { body: 'New message', tag: 'jarvis' });
-    var opts = { body: String(env.text || 'New message'), tag: env.kind === 'approval' ? 'ap-' + env.requestId : 'jarvis-' + env.kind, renotify: true, icon: 'icon-192.png', badge: 'icon-192.png', data: { kind: env.kind, requestId: env.requestId || null } };
-    if (env.kind === 'approval') { opts.requireInteraction = true; opts.actions = [{ action: 'approve', title: 'Approve' }, { action: 'deny', title: 'Deny' }]; }
+  e.waitUntil(JV.kvGet('pushkey').then(function (pk) {
+    var env = pk && e.data ? JV.open(JV.fromB64(pk), e.data.text()) : null;
+    var kind = env && env.kind || 'note';
+    var opts = { body: env ? String(env.text || 'New message from JARVIS') : 'New message from JARVIS', tag: 'jarvis-' + kind, renotify: true, icon: 'icon-192.png', badge: 'icon-192.png', data: { kind: kind } };
+    if (kind === 'approval') opts.requireInteraction = true;
     return self.clients.matchAll({ type: 'window' }).then(function (cs) {
-      cs.forEach(function (c) { c.postMessage({ type: 'push', kind: env.kind }); });
-      return self.registration.showNotification(env.kind === 'approval' ? 'JARVIS · approval needed' : 'JARVIS', opts);
+      cs.forEach(function (c) { c.postMessage({ type: 'push', kind: kind }); });
+      return self.registration.showNotification('JARVIS', opts);
     });
   }));
 });
@@ -37,13 +39,6 @@ self.addEventListener('push', function (e) {
 self.addEventListener('notificationclick', function (e) {
   var d = e.notification.data || {};
   e.notification.close();
-  if ((e.action === 'approve' || e.action === 'deny') && d.requestId) {
-    var allow = e.action === 'approve';
-    e.waitUntil(JV.pairing().then(function (p) { return p && JV.send(p, { type: 'approve', requestId: d.requestId, allow: allow }); })
-      .then(function () { return self.registration.showNotification('JARVIS', { body: allow ? 'Approved.' : 'Denied.', tag: 'ap-' + d.requestId }); })
-      .catch(function () { return self.registration.showNotification('JARVIS', { body: 'Could not reach the relay. Open the app to retry.', tag: 'ap-' + d.requestId }); }));
-    return;
-  }
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
     var tab = d.kind === 'approval' ? 'approvals' : d.kind === 'alert' ? 'alerts' : 'chat';
     for (var i = 0; i < cs.length; i++) { cs[i].postMessage({ type: 'open', tab: tab }); if ('focus' in cs[i]) return cs[i].focus(); }

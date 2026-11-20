@@ -141,3 +141,9 @@ button.wide { width: 100%; padding: 15px 0; font-family: var(--disp); font-weigh
 button.wide:disabled { opacity: .35; }
 .ap-note { margin-top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; line-height: 1.45; color: var(--amber); }
 .ap-note button { margin-top: 8px; display: block; }
+
+/* paste-to-pair (iPhone home-screen apps have their own storage) */
+.pair-row { display: flex; gap: 8px; margin-top: 14px; width: 100%; max-width: 340px; }
+.pair-input { flex: 1; min-width: 0; background: rgba(4, 14, 22, 0.9); color: #cfefff; border: 1px solid rgba(95, 227, 255, 0.35); padding: 10px 12px; font: inherit; border-radius: 2px; }
+.pair-input:focus { outline: none; border-color: rgba(95, 227, 255, 0.8); box-shadow: 0 0 10px rgba(95, 227, 255, 0.25); }
+.pair-btn { background: transparent; color: #7fdfff; border: 1px solid rgba(95, 227, 255, 0.6); padding: 10px 14px; letter-spacing: 0.15em; font: inherit; cursor: pointer; }

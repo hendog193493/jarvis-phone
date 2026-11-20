@@ -23,13 +23,33 @@ let lastActive = Date.now(), hiddenAt = 0;
 const hasWebAuthn = () => isSecureContext && 'PublicKeyCredential' in window && !!navigator.credentials;
 
 // ---------------- start ----------------
+/** Parse a pairing fragment ("k=..&u=..&d=..", optionally inside a full URL). Returns null if invalid. */
+function parsePairing(text) {
+  const i = String(text || '').indexOf('#');
+  const h = new URLSearchParams((i >= 0 ? String(text).slice(i + 1) : String(text)).trim());
+  if (!(h.get('k') && h.get('u') && h.get('d'))) return null;
+  try {
+    if (JV.fromB64url(h.get('k')).length === 32 && /^[\w-]{8,64}$/.test(h.get('u')) && /^[\w-]{8,64}$/.test(h.get('d')))
+      return { key: JV.toB64(JV.fromB64url(h.get('k'))), up: h.get('u'), down: h.get('d') };
+  } catch { /* invalid */ }
+  return null;
+}
+
 async function init() {
-  const h = new URLSearchParams(location.hash.slice(1));
   let link = null;
-  if (h.get('k') && h.get('u') && h.get('d')) {
-    try { if (JV.fromB64url(h.get('k')).length === 32 && /^[\w-]{8,64}$/.test(h.get('u')) && /^[\w-]{8,64}$/.test(h.get('d'))) link = { key: JV.toB64(JV.fromB64url(h.get('k'))), up: h.get('u'), down: h.get('d') }; } catch { link = null; }
+  if (/[#&]k=/.test(location.hash)) {
+    link = parsePairing(location.hash);
     history.replaceState(null, '', location.pathname + location.search); // the key never stays in the URL bar/history
   }
+  // iPhone home-screen apps don't share storage with Safari, so pairing can also be pasted inside the app.
+  $('pair-btn')?.addEventListener('click', async () => {
+    const field = $('pair-link');
+    const l = parsePairing(field.value);
+    field.value = ''; // don't leave the key on screen
+    if (!l) { $('unpaired-why').textContent = "That isn't a valid JARVIS pairing link. Copy it from the QR code on the PC again."; return; }
+    await JV.kvDel('pair');
+    setPinFlow(l);
+  });
   const qtab = new URLSearchParams(location.search).get('tab');
   if (qtab) S.tab = qtab;
   if ('serviceWorker' in navigator && isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});

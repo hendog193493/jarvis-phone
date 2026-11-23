@@ -33,6 +33,7 @@
     <button role="tab" data-tab="chat" class="on">CHAT</button>
     <button role="tab" data-tab="approvals">APPROVALS<span id="ap-badge" class="badge" hidden></span></button>
     <button role="tab" data-tab="alerts">ALERTS<span id="al-badge" class="badge cyan" hidden></span></button>
+    <button role="tab" data-tab="activity">ACTIVITY</button>
   </nav>
 
   <main>
@@ -40,6 +41,7 @@
       <div id="log" class="log" aria-live="polite"></div>
     </section>
     <section id="approvals" class="view"><div id="ap-list" class="list"></div></section>
+    <section id="activity" class="view"><div class="act-head"><span>WHAT JARVIS IS DOING</span><button id="act-refresh" class="act-btn" type="button">REFRESH</button></div><div id="act-list" class="list"></div></section>
     <section id="alerts" class="view">
       <div id="push-box" class="push-box" hidden>
         <div id="push-text" class="hint"></div>

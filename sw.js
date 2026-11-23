@@ -1,7 +1,7 @@
 /* JARVIS phone service worker: offline shell + decrypting Web Push notifications. */
 importScripts('vendor/nacl-fast.min.js', 'lib.js');
 
-var CACHE = 'jarvis-shell-v4';
+var CACHE = 'jarvis-shell-v5';
 var SHELL = ['./', 'index.html', 'style.css', 'guard.js', 'app.js', 'lib.js', 'vendor/nacl-fast.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'fonts/orbitron-latin-700-normal.woff2', 'fonts/rajdhani-latin-500-normal.woff2', 'fonts/rajdhani-latin-600-normal.woff2', 'fonts/share-tech-mono-latin-400-normal.woff2'];
 

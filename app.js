@@ -355,6 +355,11 @@ function handle(env, batch) {
     case 'alert':
       if (!S.alerts.some((x) => x.id === env.alert.id)) S.alerts.unshift(env.alert);
       break;
+    case 'activity':
+      S.activity = Array.isArray(env.items) ? env.items : [];
+      S.activityAt = Date.now();
+      renderActivity();
+      break;
     case 'rekey':
       rekey(env);
       return;
@@ -432,15 +437,39 @@ function deliver(msg) {
 
 function showTab(tab) {
   if (!S.pair) return;
-  S.tab = ['chat', 'approvals', 'alerts'].includes(tab) ? tab : 'chat';
+  S.tab = ['chat', 'approvals', 'alerts', 'activity'].includes(tab) ? tab : 'chat';
   document.body.classList.remove('locked');
   document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
   onlyView(S.tab);
   document.body.classList.toggle('no-bar', S.tab !== 'chat');
   if (S.tab === 'alerts') { S.seenAlerts = S.alerts.length ? S.alerts[0].ts : 0; save(); }
+  if (S.tab === 'activity') requestActivity();
   renderBadges();
   if (S.tab === 'chat') scrollChat();
 }
+
+// C8: compact read-only activity list. Asked for when the tab opens (at most once a minute), never streamed: the relay
+// has a daily message cap.
+function requestActivity(force) {
+  if (!force && S.activityAt && Date.now() - S.activityAt < 60000) { renderActivity(); return; }
+  send({ type: 'activity' }).catch(() => {});
+}
+function renderActivity() {
+  const el = document.getElementById('act-list');
+  if (!el) return;
+  const items = S.activity || [];
+  el.textContent = '';
+  if (!items.length) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = S.activityAt ? 'Nothing recent.' : 'Asking the PC...'; el.appendChild(p); return; }
+  for (const it of items) {
+    const row = document.createElement('div');
+    row.className = `act-row ${it.a ? `au-${it.a}` : ''} ${it.s === 'bg' ? 'bg' : ''}`;
+    const t = document.createElement('span'); t.className = 'act-t'; t.textContent = new Date(it.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const l = document.createElement('span'); l.className = 'act-l'; l.textContent = it.l;
+    row.append(t, l);
+    el.appendChild(row);
+  }
+}
+document.getElementById('act-refresh')?.addEventListener('click', () => requestActivity(true));
 
 function renderAll() { if (!S.pair) return; renderChat(); renderApprovals(); renderAlerts(); renderBadges(); updatePc(); }
 

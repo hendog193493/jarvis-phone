@@ -147,3 +147,11 @@ button.wide:disabled { opacity: .35; }
 .pair-input { flex: 1; min-width: 0; background: rgba(4, 14, 22, 0.9); color: #cfefff; border: 1px solid rgba(95, 227, 255, 0.35); padding: 10px 12px; font: inherit; border-radius: 2px; }
 .pair-input:focus { outline: none; border-color: rgba(95, 227, 255, 0.8); box-shadow: 0 0 10px rgba(95, 227, 255, 0.25); }
 .pair-btn { background: transparent; color: #7fdfff; border: 1px solid rgba(95, 227, 255, 0.6); padding: 10px 14px; letter-spacing: 0.15em; font: inherit; cursor: pointer; }
+
+/* C8 activity tab */
+.act-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 4px; font-size: 11px; letter-spacing: 0.18em; color: #7fdfff; }
+.act-btn { background: transparent; color: #7fdfff; border: 1px solid rgba(95, 227, 255, 0.5); padding: 4px 10px; font: inherit; letter-spacing: 0.15em; }
+.act-row { display: flex; gap: 10px; padding: 7px 14px; border-bottom: 1px solid rgba(95, 227, 255, 0.08); font-size: 13px; color: #cfefff; }
+.act-row .act-t { color: #5fb8d8; min-width: 62px; font-size: 11px; }
+.act-row.au-auto .act-l { color: #8dffb8; } .act-row.au-ask .act-l { color: #ffcf8a; } .act-row.au-deny .act-l { color: #ff9a90; }
+.act-row.bg { opacity: 0.75; font-style: italic; }

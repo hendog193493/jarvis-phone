@@ -309,7 +309,7 @@ function onRelay(m, batch) {
 }
 
 function handle(env, batch) {
-  if (env.pcTime || ['hb', 'state', 'reply', 'approval', 'approval_done', 'user'].includes(env.type)) { S.lastPc = Math.max(S.lastPc, env.ts); }
+  if (env.pcTime || ['hb', 'state', 'reply', 'approval', 'approval_done', 'user', 'activity'].includes(env.type)) { S.lastPc = Math.max(S.lastPc, env.ts); }
   if (env.status) S.pcStatus = env.status;
   if (env.sec) S.sec = env.sec;
   switch (env.type) {
@@ -358,6 +358,8 @@ function handle(env, batch) {
     case 'activity':
       S.activity = Array.isArray(env.items) ? env.items : [];
       S.activityAt = Date.now();
+      S.activityAsked = 0;
+      clearTimeout(actTimer);
       renderActivity();
       break;
     case 'rekey':
@@ -450,16 +452,36 @@ function showTab(tab) {
 
 // C8: compact read-only activity list. Asked for when the tab opens (at most once a minute), never streamed: the relay
 // has a daily message cap.
+// If the PC doesn't answer within 15 s (JARVIS not running, PC asleep, relay down) say so instead of waiting forever.
+let actTimer = null;
 function requestActivity(force) {
   if (!force && S.activityAt && Date.now() - S.activityAt < 60000) { renderActivity(); return; }
-  send({ type: 'activity' }).catch(() => {});
+  if (S.activityAsked && Date.now() - S.activityAsked < 15000) { renderActivity(); return; } // already asking
+  S.activityAsked = Date.now();
+  S.activityErr = '';
+  renderActivity();
+  send({ type: 'activity' }).catch(() => { S.activityAsked = 0; S.activityErr = 'Could not reach the relay. Check your connection, then tap REFRESH.'; renderActivity(); });
+  clearTimeout(actTimer);
+  actTimer = setTimeout(() => {
+    if (!S.activityAsked) return;
+    S.activityAsked = 0;
+    S.activityErr = pcOnline()
+      ? 'The PC did not answer. Tap REFRESH to try again.'
+      : `The PC looks offline${S.lastPc ? ` (last seen ${ago(S.lastPc).toLowerCase()} ago)` : ''}. Start JARVIS on the PC, then tap REFRESH.`;
+    renderActivity();
+  }, 15000);
 }
+function pcOnline() { return !!S.lastPc && Date.now() - S.lastPc < 660000; }
 function renderActivity() {
   const el = document.getElementById('act-list');
   if (!el) return;
   const items = S.activity || [];
   el.textContent = '';
-  if (!items.length) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = S.activityAt ? 'Nothing recent.' : 'Asking the PC...'; el.appendChild(p); return; }
+  const note = (text, cls) => { const p = document.createElement('p'); p.className = cls || 'hint'; p.textContent = text; el.appendChild(p); };
+  if (S.activityAsked) note(pcOnline() ? 'Asking the PC...' : 'Asking the PC... (it looks offline, so this may not get an answer)');
+  if (S.activityErr) note(S.activityErr, 'hint act-err');
+  if (S.activityAt && items.length) note(`As of ${new Date(S.activityAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`, 'hint act-asof');
+  if (!items.length) { if (S.activityAt && !S.activityAsked) note('Nothing recent on the PC.'); return; }
   for (const it of items) {
     const row = document.createElement('div');
     row.className = `act-row ${it.a ? `au-${it.a}` : ''} ${it.s === 'bg' ? 'bg' : ''}`;
